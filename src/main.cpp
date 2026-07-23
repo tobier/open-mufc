@@ -33,15 +33,14 @@ static void runSelfTest()
 #endif
 }
 
-// DCS-BIOS publishes the running aircraft at address 0x0000. It is blank while
-// no mission is loaded, so it doubles as a "mission started" signal.
 static void onAircraftNameChange(char *newValue)
 {
-  AJS37::setActive(AJS37::handles(newValue));
+  const bool handled = AJS37::handles(newValue);
+  AJS37::setActive(handled);
 
   // A module that took the display owns it from here; only paint the idle
   // screen when nothing did.
-  if (AJS37::handles(newValue))
+  if (handled)
   {
     return;
   }

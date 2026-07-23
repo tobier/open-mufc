@@ -3,14 +3,12 @@
 #include <Arduino.h>
 #include <string.h>
 
-// Not <DcsBios.h>: that header defines the transport (setup/loop/parser) as
-// non-inline functions, so only main.cpp may include it. Modules that merely
-// consume export data pull in the pieces they need instead.
 #include <internal/Addresses.h>
 #include <internal/ExportStreamListener.h>
 
 #include <U8g2lib.h>
 
+#include "Lights.h"
 #include "MainDisplay.h"
 
 #define CK37_DIGITS 6
@@ -20,7 +18,7 @@
 namespace
 {
     char digits[CK37_DIGITS + 1] = "      ";
-    bool dirty = false;
+    bool ck37Dirty = false;
     bool active = false;
 
     void setDigit(uint8_t index, char value)
@@ -31,7 +29,7 @@ namespace
         }
 
         digits[index] = value;
-        dirty = true;
+        ck37Dirty = true;
     }
 
     // DCS-BIOS exports each CK37 drum as its own single-character field, two
@@ -50,6 +48,55 @@ namespace
     DcsBios::StringBuffer<1> navData4(AJS37_AJS37_NAV_INDICATOR_DATA_4_A, onNavData4);
     DcsBios::StringBuffer<1> navData5(AJS37_AJS37_NAV_INDICATOR_DATA_5_A, onNavData5);
     DcsBios::StringBuffer<1> navData6(AJS37_AJS37_NAV_INDICATOR_DATA_6_A, onNavData6);
+
+    // Lamp state, mirrored from DCS. Held rather than written straight through
+    // so activation can restore the panel without waiting for the next change.
+    bool warnLeft = false;
+    bool warnRight = false;
+    bool attLit = false;
+    bool hojdLit = false;
+    bool lightsDirty = false;
+
+    void applyLights()
+    {
+        // Huvudvarning is a left/right pair; the panel has one master caution,
+        // so either lamp lights it.
+        Lights::set(Lights::MasterCaution, active && (warnLeft || warnRight));
+
+        // The Viggen has no A/A or A/G modes, so these two annunciators carry
+        // real Viggen lamps instead.
+        Lights::set(Lights::AirToAir, active && attLit);
+        Lights::set(Lights::AirToGround, active && hojdLit);
+    }
+
+    void onHuvudvarningL(unsigned int value)
+    {
+        warnLeft = (value != 0);
+        lightsDirty = true;
+    }
+
+    void onHuvudvarningR(unsigned int value)
+    {
+        warnRight = (value != 0);
+        lightsDirty = true;
+    }
+
+    void onAttLamp(unsigned int value)
+    {
+        attLit = (value != 0);
+        lightsDirty = true;
+    }
+
+    void onHojdLamp(unsigned int value)
+    {
+        hojdLit = (value != 0);
+        lightsDirty = true;
+    }
+
+    DcsBios::IntegerBuffer huvudvarningL(AJS37_HUVUDVARNING_L, onHuvudvarningL);
+    DcsBios::IntegerBuffer huvudvarningR(AJS37_HUVUDVARNING_R, onHuvudvarningR);
+    DcsBios::IntegerBuffer attLamp(AJS37_ATT_LAMP, onAttLamp);
+    DcsBios::IntegerBuffer hojdLamp(AJS37_HOJD_LAMP, onHojdLamp);
 }
 
 namespace AJS37
@@ -58,13 +105,17 @@ namespace AJS37
     {
         memset(digits, ' ', CK37_DIGITS);
         digits[CK37_DIGITS] = '\0';
-        dirty = false;
+        ck37Dirty = false;
+
+        warnLeft = false;
+        warnRight = false;
+        attLit = false;
+        hojdLit = false;
+        lightsDirty = true;
     }
 
     bool handles(const char *aircraftName)
     {
-        // PSTR keeps the name in flash. Verify this against what DCS-BIOS
-        // actually reports for the Viggen.
         return strcmp_P(aircraftName, PSTR("AJS37")) == 0;
     }
 
@@ -80,17 +131,28 @@ namespace AJS37
         if (active)
         {
             // Repaint so the CK37 field replaces whatever idle() left behind.
-            dirty = true;
+            ck37Dirty = true;
         }
         else
         {
             init();
         }
+
+        // Takes the lamps live, or drives them all off on release.
+        lightsDirty = true;
     }
 
     void update()
     {
-        if (!active || !dirty)
+        // Lamps are applied even when inactive, so releasing the module still
+        // drives them off; applyLights() gates on active itself.
+        if (lightsDirty)
+        {
+            applyLights();
+            lightsDirty = false;
+        }
+
+        if (!active || !ck37Dirty)
         {
             return;
         }
@@ -102,6 +164,6 @@ namespace AJS37
         MainDisplay::drawText(CK37_X, CK37_Y, digits);
         MainDisplay::flush();
 
-        dirty = false;
+        ck37Dirty = false;
     }
 }
