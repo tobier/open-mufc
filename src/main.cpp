@@ -1,15 +1,20 @@
 #include <Arduino.h>
 
 #include "Lights.h"
+#include "MainDisplay.h"
 
 void setup()
 {
   Serial.begin(COM_BAUD_RATE);
 
+  MainDisplay::init();
+  MainDisplay::selfTest();
+
   Lights::init();
   Lights::selfTest();
 
-  Serial.println("Hello, from open-mufc!");
+  delay(2500);
+  MainDisplay::clear();
 }
 
 void loop()
