@@ -2,6 +2,7 @@
 
 #include "Lights.h"
 #include "MainDisplay.h"
+#include "OptionDisplays.h"
 
 void setup()
 {
@@ -10,14 +11,20 @@ void setup()
   MainDisplay::init();
   MainDisplay::selfTest();
 
+  OptionDisplays::init();
+  OptionDisplays::selfTest();
+
   Lights::init();
   Lights::selfTest();
 
   delay(2500);
+
   MainDisplay::clear();
+  OptionDisplays::clearAll();
+  OptionDisplays::flushAll();
 }
 
 void loop()
 {
-  // TODO: loop code
+  OptionDisplays::update();
 }
