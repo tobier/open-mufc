@@ -1,5 +1,12 @@
 #include <Arduino.h>
 
+// DcsBios.h defines setup(), loop() and the parser as non-inline functions, so
+// exactly one translation unit may declare the transport. Keep this here rather
+// than in build_flags, or every module that includes DcsBios.h collides at link.
+#define DCSBIOS_DEFAULT_SERIAL
+#include <DcsBios.h>
+
+#include "AJS37.h"
 #include "Lights.h"
 #include "MainDisplay.h"
 #include "OptionDisplays.h"
@@ -26,18 +33,50 @@ static void runSelfTest()
 #endif
 }
 
+// DCS-BIOS publishes the running aircraft at address 0x0000. It is blank while
+// no mission is loaded, so it doubles as a "mission started" signal.
+static void onAircraftNameChange(char *newValue)
+{
+  AJS37::setActive(AJS37::handles(newValue));
+
+  // A module that took the display owns it from here; only paint the idle
+  // screen when nothing did.
+  if (AJS37::handles(newValue))
+  {
+    return;
+  }
+
+  if (newValue[0] == '\0' || newValue[0] == ' ')
+  {
+    MainDisplay::idle(F("waiting for mission"));
+  }
+  else
+  {
+    // Unsupported aircraft: show which one, so it is obvious why nothing else
+    // is happening.
+    MainDisplay::idle(newValue);
+  }
+}
+
+DcsBios::StringBuffer<16> aircraftNameBuffer(MetadataStart_ACFT_NAME_A, onAircraftNameChange);
+
 void setup()
 {
-  Serial.begin(COM_BAUD_RATE);
+  DcsBios::setup();
 
   MainDisplay::init();
   OptionDisplays::init();
   Lights::init();
+  AJS37::init();
 
   runSelfTest();
+
+  MainDisplay::idle(F("waiting for DCS-BIOS"));
 }
 
 void loop()
 {
+  DcsBios::loop();
+  AJS37::update();
   OptionDisplays::update();
 }

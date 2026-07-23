@@ -21,6 +21,16 @@ namespace
 
     // Small proportional font used for boot info and debug text.
     const uint8_t *const MessageFont = u8g2_font_7x13_tf;
+
+    // Shared by both idle() overloads. Leaves the buffer ready for line 2.
+    void drawBanner()
+    {
+        display.clearBuffer();
+        display.setFont(MessageFont);
+
+        display.setCursor(0, MESSAGE_LINE_1);
+        display.print(F("open-mufc " FIRMWARE_VERSION));
+    }
 }
 
 namespace MainDisplay
@@ -48,6 +58,21 @@ namespace MainDisplay
         display.setCursor(0, MESSAGE_LINE_3);
         display.print(F("Main display: OK"));
 
+        display.sendBuffer();
+    }
+
+    void idle(const char *status)
+    {
+        drawBanner();
+        display.drawStr(0, MESSAGE_LINE_2, status);
+        display.sendBuffer();
+    }
+
+    void idle(const __FlashStringHelper *status)
+    {
+        drawBanner();
+        display.setCursor(0, MESSAGE_LINE_2);
+        display.print(status);
         display.sendBuffer();
     }
 

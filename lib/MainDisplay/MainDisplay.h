@@ -2,6 +2,9 @@
 
 #include <stdint.h>
 
+// For __FlashStringHelper, so callers can pass F("...") literals.
+#include <Arduino.h>
+
 namespace MainDisplay
 {
     // Initializes the display over SPI. Call once from setup().
@@ -9,6 +12,14 @@ namespace MainDisplay
 
     // Draws firmware/build info using the built-in message font.
     void selfTest();
+
+    // Draws the idle screen: firmware banner on the first line, the given
+    // status on the second. For when no aircraft module owns the display;
+    // aircraft data uses the generic drawing below with the module's own font.
+    // The F() overload keeps literals in flash; the char* one is for runtime
+    // strings such as the aircraft name DCS-BIOS hands us in RAM.
+    void idle(const char *status);
+    void idle(const __FlashStringHelper *status);
 
     // Generic drawing. Aircraft modules own font choice and layout, since
     // both differ per airframe; this library only owns the panel itself.
