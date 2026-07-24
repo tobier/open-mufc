@@ -32,9 +32,6 @@ namespace
         ck37Dirty = true;
     }
 
-    // DCS-BIOS exports each CK37 drum as its own single-character field, two
-    // bytes apart, so one listener per digit. Addresses come from the named
-    // constants because they shift between DCS-BIOS versions.
     void onNavData1(char *value) { setDigit(0, value[0]); }
     void onNavData2(char *value) { setDigit(1, value[0]); }
     void onNavData3(char *value) { setDigit(2, value[0]); }
@@ -49,8 +46,6 @@ namespace
     DcsBios::StringBuffer<1> navData5(AJS37_AJS37_NAV_INDICATOR_DATA_5_A, onNavData5);
     DcsBios::StringBuffer<1> navData6(AJS37_AJS37_NAV_INDICATOR_DATA_6_A, onNavData6);
 
-    // Lamp state, mirrored from DCS. Held rather than written straight through
-    // so activation can restore the panel without waiting for the next change.
     bool warnLeft = false;
     bool warnRight = false;
     bool attLit = false;
@@ -144,8 +139,6 @@ namespace AJS37
 
     void update()
     {
-        // Lamps are applied even when inactive, so releasing the module still
-        // drives them off; applyLights() gates on active itself.
         if (lightsDirty)
         {
             applyLights();
@@ -157,8 +150,6 @@ namespace AJS37
             return;
         }
 
-        // The font is set here rather than in init() because idle() switches
-        // the display to the message font whenever the mission state changes.
         MainDisplay::clearBuffer();
         MainDisplay::setFont(u8g2_font_inb46_mn);
         MainDisplay::drawText(CK37_X, CK37_Y, digits);

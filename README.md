@@ -13,6 +13,14 @@ An open source firmware implementation for the [Multipurpose UFC][mufc-url].
 > kind. Flashing it to your hardware may void warranties or damage your device. You are
 > solely responsible for any consequences of using this software.
 
+## Supported modules
+
+| Aircraft | Status | Comment |
+| --- | :---: | --- |
+| AJS-37 | 🚧 | In progress, rudimentary CK 37 support added |
+| F-16C | ❌ | Planned, not yet implemented |
+| F/A-18C | ❌ | Planned, not yet implemented |
+
 ## License
 
 Distributed under the `GPL 3.0` license. See [LICENSE][license-url] for more information.

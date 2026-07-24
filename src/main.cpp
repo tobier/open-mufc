@@ -6,9 +6,9 @@
 #define DCSBIOS_DEFAULT_SERIAL
 #include <DcsBios.h>
 
-#include "AJS37.h"
 #include "Lights.h"
 #include "MainDisplay.h"
+#include "Modules.h"
 #include "OptionDisplays.h"
 
 // Boot self test runs unless platformio.ini defines ENABLE_SELF_TEST=0.
@@ -35,12 +35,9 @@ static void runSelfTest()
 
 static void onAircraftNameChange(char *newValue)
 {
-  const bool handled = AJS37::handles(newValue);
-  AJS37::setActive(handled);
-
   // A module that took the display owns it from here; only paint the idle
   // screen when nothing did.
-  if (handled)
+  if (Modules::select(newValue))
   {
     return;
   }
@@ -66,7 +63,7 @@ void setup()
   MainDisplay::init();
   OptionDisplays::init();
   Lights::init();
-  AJS37::init();
+  Modules::init();
 
   runSelfTest();
 
@@ -76,6 +73,6 @@ void setup()
 void loop()
 {
   DcsBios::loop();
-  AJS37::update();
+  Modules::update();
   OptionDisplays::update();
 }
