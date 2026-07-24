@@ -1,0 +1,42 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # scripts/version.py runs `git describe --tags`, which needs full
+          # history and tags. The default shallow checkout has neither, so
+          # tagged builds would silently come out as plain commit hashes.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      # Toolchain and framework packages are ~100 MB and unchanged between
+      # runs; only re-download them when the project config moves.
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio/.cache
+            ~/.platformio/packages
+            ~/.platformio/platforms
+          key: ${{ runner.os }}-pio-${{ hashFiles('platformio.ini') }}
+          restore-keys: ${{ runner.os }}-pio-
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Build
+        run: pio run
