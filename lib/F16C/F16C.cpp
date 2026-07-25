@@ -8,6 +8,7 @@
 #include <internal/Addresses.h>
 #include <internal/ExportStreamListener.h>
 
+#include "Lights.h"
 #include "MainDisplay.h"
 
 // 24 cells of 10x12 is 240x60, centred on the 256x64 panel.
@@ -113,6 +114,40 @@ namespace
 
     bool active = false;
     bool dedDirty = false;
+    bool lightsDirty = false;
+
+    bool aaBtn = false;
+    bool agBtn = false;
+    bool masterCaution = false;
+
+    void applyLights()
+    {
+        Lights::set(Lights::MasterCaution, active && masterCaution);
+        Lights::set(Lights::AirToAir, active && aaBtn);
+        Lights::set(Lights::AirToGround, active && agBtn);
+    }
+
+    void onIcpAaModeBtnChange(unsigned int newValue)
+    {
+        aaBtn = (newValue != 0);
+        lightsDirty = true;
+    }
+
+    void onIcpAgModeBtnChange(unsigned int newValue)
+    {
+        agBtn = (newValue != 0);
+        lightsDirty = true;
+    }
+
+    void onLightMasterCautionChange(unsigned int newValue)
+    {
+        masterCaution = (newValue != 0);
+        lightsDirty = true;
+    }
+
+    DcsBios::IntegerBuffer icpAaModeBtnBuffer(F_16C_50_ICP_AA_MODE_BTN, onIcpAaModeBtnChange);
+    DcsBios::IntegerBuffer icpAgModeBtnBuffer(F_16C_50_ICP_AG_MODE_BTN, onIcpAgModeBtnChange);
+    DcsBios::IntegerBuffer lightMasterCautionBuffer(F_16C_50_LIGHT_MASTER_CAUTION, onLightMasterCautionChange);
 
     uint8_t inverseOf(uint8_t c)
     {
@@ -217,6 +252,11 @@ namespace F16C
     void init()
     {
         dedDirty = false;
+
+        aaBtn = false;
+        agBtn = false;
+        masterCaution = false;
+        lightsDirty = true;
     }
 
     bool handles(const char *aircraftName)
@@ -239,10 +279,20 @@ namespace F16C
             // no line has changed since the last time we flew the Viper.
             dedDirty = true;
         }
+
+        // Takes the lamps live, or drives them all off on release.
+        lightsDirty = true;
     }
 
     void update()
     {
+        // Before the active check, so a release still reaches the lamps.
+        if (lightsDirty)
+        {
+            applyLights();
+            lightsDirty = false;
+        }
+
         if (!active)
         {
             return;
