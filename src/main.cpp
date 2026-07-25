@@ -1,9 +1,6 @@
 #include <Arduino.h>
 
-// DcsBios.h defines setup(), loop() and the parser as non-inline functions, so
-// exactly one translation unit may declare the transport. Keep this here rather
-// than in build_flags, or every module that includes DcsBios.h collides at link.
-#define DCSBIOS_DEFAULT_SERIAL
+#define DCSBIOS_IRQ_SERIAL
 #include <DcsBios.h>
 
 #include "Lights.h"

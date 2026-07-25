@@ -3,10 +3,10 @@
 #include <Arduino.h>
 #include <string.h>
 
+#include <U8g2lib.h>
+
 #include <internal/Addresses.h>
 #include <internal/ExportStreamListener.h>
-
-#include <U8g2lib.h>
 
 #include "Lights.h"
 #include "MainDisplay.h"

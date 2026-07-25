@@ -11,8 +11,8 @@ namespace
     // The registry. Adding an airframe means writing the module and adding one
     // row here; nothing else in the firmware needs to know it exists.
     const Modules::Module registry[] = {
-        {AJS37::handles, AJS37::init, AJS37::setActive, AJS37::update},
-        {FA18C::handles, FA18C::init, FA18C::setActive, FA18C::update},
+        //{AJS37::handles, AJS37::init, AJS37::setActive, AJS37::update}, TODO: enable when ready
+        //{FA18C::handles, FA18C::init, FA18C::setActive, FA18C::update}, TODO: enable when ready
         {F16C::handles, F16C::init, F16C::setActive, F16C::update},
     };
 

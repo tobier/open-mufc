@@ -18,7 +18,7 @@ An open source firmware implementation for the [Multipurpose UFC][mufc-url].
 | Aircraft | Status | Comment |
 | --- | :---: | --- |
 | AJS-37 | 🚧 | In progress, rudimentary CK 37 support added |
-| F-16C | ❌ | Planned, not yet implemented |
+| F-16C | 🚧 | In progress, DED implemented |
 | F/A-18C | ❌ | Planned, not yet implemented |
 
 ## License
