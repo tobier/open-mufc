@@ -44,23 +44,6 @@ namespace MainDisplay
         display.clearDisplay();
     }
 
-    void selfTest()
-    {
-        display.clearBuffer();
-        display.setFont(MessageFont);
-
-        display.setCursor(0, MESSAGE_LINE_1);
-        display.print(F("open-mufc " FIRMWARE_VERSION));
-
-        display.setCursor(0, MESSAGE_LINE_2);
-        display.print(F("built " __DATE__ " " __TIME__));
-
-        display.setCursor(0, MESSAGE_LINE_3);
-        display.print(F("Main display: OK"));
-
-        display.sendBuffer();
-    }
-
     void idle(const char *status)
     {
         drawBanner();

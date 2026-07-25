@@ -20,8 +20,4 @@ namespace Lights
 
     // Bulk control.
     void off();
-
-    // Blocking power-on cascade: lights each one in turn, holds, then clears.
-    // Only safe to call while nothing else needs servicing, i.e. from setup().
-    void selfTest(uint16_t stepMs = 500);
 }

@@ -9,6 +9,9 @@
 
 #define TCA_ADDR 0x70
 
+// Inset so the text is not flush against the bezel.
+#define LABEL_RIGHT_MARGIN 4
+
 namespace
 {
     // Mux channel per panel, indexed by OptionDisplays::Panel.
@@ -18,9 +21,9 @@ namespace
     static_assert(sizeof(MUX_CHANNELS) / sizeof(MUX_CHANNELS[0]) == OptionDisplays::Count,
                   "MUX_CHANNELS must have exactly one entry per OptionDisplays::Panel");
 
-    U8G2_SSD1306_128X64_NONAME_F_HW_I2C display(U8G2_R2, U8X8_PIN_NONE);
+    U8G2_SSD1306_128X32_UNIVISION_F_HW_I2C display(U8G2_R2, U8X8_PIN_NONE);
 
-    const uint8_t *const LabelFont = u8g2_font_helvB18_tr;
+    const uint8_t *font = u8g2_font_VCR_OSD_mf;
 
     char labels[OptionDisplays::Count][OptionDisplays::MaxLabel + 1];
     uint8_t dirty = 0; // bit per panel
@@ -33,18 +36,39 @@ namespace
         Wire.endTransmission();
     }
 
-    // Renders one panel's label and pushes it. Blocking, ~25 ms at 400 kHz.
     void render(uint8_t index)
     {
         selectChannel(MUX_CHANNELS[index]);
 
         display.clearBuffer();
-        display.setFont(LabelFont);
+        display.setFont(font);
 
         const char *text = labels[index];
-        const uint8_t x = (display.getDisplayWidth() - display.getStrWidth(text)) / 2;
-        const uint8_t y = (display.getDisplayHeight() + display.getAscent()) / 2;
-        display.drawStr(x, y, text);
+        const uint8_t w = display.getStrWidth(text);
+        const uint8_t ascent = display.getAscent();
+
+        // These panels are only 32 px tall and the fonts that fit at 1x leave
+        // half of that empty, so double up whenever there is room for it.
+        const bool doubled = (uint16_t)w * 2 <= display.getDisplayWidth() &&
+                             (uint16_t)ascent * 2 <= display.getDisplayHeight();
+        const uint8_t scale = doubled ? 2 : 1;
+
+        // Right justified, as the readouts in the aircraft are, so a value keeps
+        // its digits in place as it gains and loses characters.
+        const uint16_t used = (uint16_t)w * scale + LABEL_RIGHT_MARGIN;
+        const uint8_t x = used < display.getDisplayWidth()
+                              ? display.getDisplayWidth() - used
+                              : 0;
+        const uint8_t y = (display.getDisplayHeight() + ascent * scale) / 2;
+
+        if (doubled)
+        {
+            display.drawStrX2(x, y, text);
+        }
+        else
+        {
+            display.drawStr(x, y, text);
+        }
 
         display.sendBuffer();
     }
@@ -54,7 +78,6 @@ namespace OptionDisplays
 {
     void init()
     {
-
         Wire.begin();
         display.setBusClock(400000);
 
@@ -69,19 +92,6 @@ namespace OptionDisplays
         dirty = 0;
     }
 
-    void selfTest(uint16_t stepMs)
-    {
-        static const char *const banner[Count] = {"OPEN", "UFC", FIRMWARE_VERSION, "OPT", "OK"};
-
-        // One panel per pass so they light up in sequence rather than at once.
-        for (uint8_t i = 0; i < Count; ++i)
-        {
-            setLabel(static_cast<Panel>(i), banner[i]);
-            update();
-            delay(stepMs);
-        }
-    }
-
     void setLabel(Panel panel, const char *text)
     {
         if (panel >= Count)
@@ -92,6 +102,17 @@ namespace OptionDisplays
         strncpy(labels[panel], text, MaxLabel);
         labels[panel][MaxLabel] = '\0';
         dirty |= (1 << panel);
+    }
+
+    void setFont(const uint8_t *newFont)
+    {
+        if (newFont == NULL || newFont == font)
+        {
+            return;
+        }
+
+        font = newFont;
+        dirty = (1 << Count) - 1;
     }
 
     void clearAll()

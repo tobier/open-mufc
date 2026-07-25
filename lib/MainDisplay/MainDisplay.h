@@ -10,9 +10,6 @@ namespace MainDisplay
     // Initializes the display over SPI. Call once from setup().
     void init();
 
-    // Draws firmware/build info using the built-in message font.
-    void selfTest();
-
     // Draws the idle screen: firmware banner on the first line, the given
     // status on the second. For when no aircraft module owns the display;
     // aircraft data uses the generic drawing below with the module's own font.

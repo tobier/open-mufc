@@ -10,6 +10,7 @@
 
 #include "Lights.h"
 #include "MainDisplay.h"
+#include "OptionDisplays.h"
 
 // 24 cells of 10x12 is 240x60, centred on the 256x64 panel.
 #define DED_LINES 5
@@ -18,6 +19,9 @@
 #define DED_LINE_H 12
 #define DED_X ((256 - DED_COLS * DED_CELL_W) / 2)
 #define DED_LINE_1_BASELINE 12
+
+// CMDS expendable counts, shown on the option panels below the GO/NO GO status.
+#define CMDS_AMOUNT 4
 
 // The font has no '@' or '^'; those slots hold symbols.
 #define DED_GLYPH_UP_DOWN_ARROW 0x40
@@ -149,6 +153,71 @@ namespace
     DcsBios::IntegerBuffer icpAgModeBtnBuffer(F_16C_50_ICP_AG_MODE_BTN, onIcpAgModeBtnChange);
     DcsBios::IntegerBuffer lightMasterCautionBuffer(F_16C_50_LIGHT_MASTER_CAUTION, onLightMasterCautionChange);
 
+    char cmdsO1[CMDS_AMOUNT + 1] = "";
+    char cmdsO2[CMDS_AMOUNT + 1] = "";
+    char cmdsCh[CMDS_AMOUNT + 1] = "";
+    char cmdsFl[CMDS_AMOUNT + 1] = "";
+
+    bool panelsDirty = false;
+
+    // DCS pads the amounts, and the panels are right justified.
+    void copyTrimmed(char *dest, const char *src)
+    {
+        while (*src == ' ')
+        {
+            src++;
+        }
+
+        uint8_t len = strlen(src);
+        while (len > 0 && src[len - 1] == ' ')
+        {
+            len--;
+        }
+
+        memcpy(dest, src, len);
+        dest[len] = '\0';
+    }
+
+    void applyPanels()
+    {
+        // Panel 1 is the CMDS STATUS window. Left blank: DCS does not appear to
+        // drive LIGHT_CMDS_GO / _NO_GO, so there is nothing truthful to show.
+        OptionDisplays::setLabel(OptionDisplays::Opt1, "");
+        OptionDisplays::setLabel(OptionDisplays::Opt2, active ? cmdsO1 : "");
+        OptionDisplays::setLabel(OptionDisplays::Opt3, active ? cmdsO2 : "");
+        OptionDisplays::setLabel(OptionDisplays::Opt4, active ? cmdsCh : "");
+        OptionDisplays::setLabel(OptionDisplays::Opt5, active ? cmdsFl : "");
+    }
+
+    void onCmdsO1AmountChange(char *newValue)
+    {
+        copyTrimmed(cmdsO1, newValue);
+        panelsDirty = true;
+    }
+
+    void onCmdsO2AmountChange(char *newValue)
+    {
+        copyTrimmed(cmdsO2, newValue);
+        panelsDirty = true;
+    }
+
+    void onCmdsChAmountChange(char *newValue)
+    {
+        copyTrimmed(cmdsCh, newValue);
+        panelsDirty = true;
+    }
+
+    void onCmdsFlAmountChange(char *newValue)
+    {
+        copyTrimmed(cmdsFl, newValue);
+        panelsDirty = true;
+    }
+
+    DcsBios::StringBuffer<CMDS_AMOUNT> cmdsO1Buffer(F_16C_50_CMDS_O1_AMOUNT_A, onCmdsO1AmountChange);
+    DcsBios::StringBuffer<CMDS_AMOUNT> cmdsO2Buffer(F_16C_50_CMDS_O2_AMOUNT_A, onCmdsO2AmountChange);
+    DcsBios::StringBuffer<CMDS_AMOUNT> cmdsChBuffer(F_16C_50_CMDS_CH_AMOUNT_A, onCmdsChAmountChange);
+    DcsBios::StringBuffer<CMDS_AMOUNT> cmdsFlBuffer(F_16C_50_CMDS_FL_AMOUNT_A, onCmdsFlAmountChange);
+
     uint8_t inverseOf(uint8_t c)
     {
         if (c >= 'A' && c <= 'Z')
@@ -257,6 +326,12 @@ namespace F16C
         agBtn = false;
         masterCaution = false;
         lightsDirty = true;
+
+        cmdsO1[0] = '\0';
+        cmdsO2[0] = '\0';
+        cmdsCh[0] = '\0';
+        cmdsFl[0] = '\0';
+        panelsDirty = true;
     }
 
     bool handles(const char *aircraftName)
@@ -280,8 +355,9 @@ namespace F16C
             dedDirty = true;
         }
 
-        // Takes the lamps live, or drives them all off on release.
+        // Takes the lamps and panels live, or clears them on release.
         lightsDirty = true;
+        panelsDirty = true;
     }
 
     void update()
@@ -291,6 +367,12 @@ namespace F16C
         {
             applyLights();
             lightsDirty = false;
+        }
+
+        if (panelsDirty)
+        {
+            applyPanels();
+            panelsDirty = false;
         }
 
         if (!active)

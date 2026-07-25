@@ -57,16 +57,4 @@ namespace Lights
             write(i, false);
         }
     }
-
-    void selfTest(uint16_t stepMs)
-    {
-        for (uint8_t i = 0; i < Count; ++i)
-        {
-            write(i, true);
-            delay(stepMs);
-        }
-
-        delay(stepMs);
-        off();
-    }
 }

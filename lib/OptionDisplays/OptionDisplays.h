@@ -20,11 +20,11 @@ namespace OptionDisplays
     // Initializes Wire, the mux and every panel. Call once from setup().
     void init();
 
-    // Draws firmware info across the panels, one at a time top to bottom.
-    // Blocking; only safe to call while nothing else needs servicing.
-    void selfTest(uint16_t stepMs = 250);
-
     void setLabel(Panel panel, const char *text);
+
+    // Aircraft modules own font choice, as with MainDisplay. Applies to every
+    // panel; takes effect on the next redraw.
+    void setFont(const uint8_t *font);
     void clearAll();
 
     void update();
