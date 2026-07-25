@@ -29,6 +29,10 @@ namespace Modules
     // the name, leaving the caller to paint the idle screen.
     bool select(const char *aircraftName);
 
+    // Drops the active module without naming a replacement, for when the sim
+    // goes away rather than swapping aircraft. Idempotent.
+    void release();
+
     // Drives every module, not just the active one: a module that was just
     // released still needs a tick to walk its lamps back down. Call every
     // loop().

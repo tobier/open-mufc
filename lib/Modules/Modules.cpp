@@ -75,6 +75,17 @@ namespace Modules
         return activeModule != NoModule;
     }
 
+    void release()
+    {
+        if (activeModule == NoModule)
+        {
+            return;
+        }
+
+        registry[activeModule].setActive(false);
+        activeModule = NoModule;
+    }
+
     void update()
     {
         for (uint8_t i = 0; i < ModuleCount; i++)
