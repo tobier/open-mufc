@@ -10,13 +10,11 @@ namespace MainDisplay
     // Initializes the display over SPI. Call once from setup().
     void init();
 
-    // Draws the idle screen: firmware banner on the first line, the given
-    // status on the second. For when no aircraft module owns the display;
-    // aircraft data uses the generic drawing below with the module's own font.
-    // The F() overload keeps literals in flash; the char* one is for runtime
-    // strings such as the aircraft name DCS-BIOS hands us in RAM.
-    void idle(const char *status);
-    void idle(const __FlashStringHelper *status);
+    // Draws the boot splash, from assets/splash.png via scripts/splash.py.
+    void splash();
+
+    // Blanks the panel, for when no aircraft module owns it.
+    void idle();
 
     // Generic drawing. Aircraft modules own font choice and layout, since
     // both differ per airframe; this library only owns the panel itself.

@@ -20,7 +20,7 @@ namespace FA18C
     {
         if (active)
         {
-            MainDisplay::idle(F("F/A-18C: not implemented"));
+            MainDisplay::idle();
         }
     }
 

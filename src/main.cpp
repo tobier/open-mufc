@@ -8,6 +8,8 @@
 #include "Modules.h"
 #include "OptionDisplays.h"
 
+#define SPLASH_HOLD_MS 5000
+
 #define ACFT_NAME_LEN 24
 
 // The update counter increments every export frame, so its absence means DCS
@@ -16,8 +18,8 @@
 
 static char aircraft[ACFT_NAME_LEN + 1] = "";
 static unsigned long lastFrameMs = 0;
-static bool connected = false;
 static bool stalled = false;
+static bool frameReceived = false;
 
 static void applyAircraft()
 {
@@ -26,25 +28,15 @@ static void applyAircraft()
   const bool none = aircraft[0] == '\0' || aircraft[0] == ' ' ||
                     strcmp_P(aircraft, PSTR("NONE")) == 0;
 
-  // A module that took the display owns it from here; only paint the idle
-  // screen when nothing did.
+  // A module that took the display owns it from here. Anything else is DCS-BIOS
+  // talking with nothing for us to draw, which stays blank.
   if (!none && Modules::select(aircraft))
   {
     return;
   }
 
   Modules::release();
-
-  if (none)
-  {
-    MainDisplay::idle(F("waiting for mission"));
-  }
-  else
-  {
-    // Unsupported aircraft: show which one, so it is obvious why nothing else
-    // is happening.
-    MainDisplay::idle(aircraft);
-  }
+  MainDisplay::idle();
 }
 
 static void onAircraftNameChange(char *newValue)
@@ -59,7 +51,7 @@ static void onUpdateCounterChange(unsigned int newValue)
   (void)newValue;
 
   lastFrameMs = millis();
-  connected = true;
+  frameReceived = true;
 
   if (stalled)
   {
@@ -82,18 +74,34 @@ void setup()
   Lights::init();
   Modules::init();
 
-  MainDisplay::idle(F("waiting for DCS-BIOS"));
+  MainDisplay::splash();
+
+  // Pumped rather than delayed so the splash gives way the moment DCS-BIOS has
+  // something to show. Callbacks run from here, but nothing repaints until
+  // Modules::update() does, so the splash stays up throughout.
+  const unsigned long splashStart = millis();
+  while (!frameReceived && (millis() - splashStart) < SPLASH_HOLD_MS)
+  {
+    DcsBios::loop();
+  }
+
+  // Blanks if nothing arrived, or hands the panel to whatever did.
+  applyAircraft();
+
+  // Start the clock here so a boot with no sim running still falls through to
+  // the stall path, rather than needing a connection to have happened first.
+  lastFrameMs = millis();
 }
 
 void loop()
 {
   DcsBios::loop();
 
-  if (connected && !stalled && (millis() - lastFrameMs) > STALL_TIMEOUT_MS)
+  if (!stalled && (millis() - lastFrameMs) > STALL_TIMEOUT_MS)
   {
     stalled = true;
     Modules::release();
-    MainDisplay::idle(F("waiting for DCS-BIOS"));
+    MainDisplay::idle();
   }
 
   Modules::update();
