@@ -1,3 +1,4 @@
+#if COMPILE_FOR_DCS
 #define DCSBIOS_IRQ_SERIAL
 #include <DcsBios.h>
 
@@ -107,3 +108,4 @@ namespace DCS
         OptionDisplays::update();
     }
 }
+#endif // COMPILE_FOR_DCS

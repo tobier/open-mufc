@@ -1,7 +1,10 @@
 #include <Arduino.h>
 
-#include "BMS.h"
+#if COMPILE_FOR_DCS
 #include "DCS.h"
+#elif COMPILE_FOR_BMS
+#include "BMS.h"
+#endif
 
 #include "Lights.h"
 #include "MainDisplay.h"
