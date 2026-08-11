@@ -101,7 +101,7 @@ namespace
     DcsBios::IntegerBuffer hojdLamp(AJS37_HOJD_LAMP, onHojdLamp);
 }
 
-namespace AJS37
+namespace DCS::AJS37
 {
     void init()
     {

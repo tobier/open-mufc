@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Modules
+namespace DCS::Modules
 {
     // How the dispatcher sees an aircraft module. Modules stay plain
     // namespaces with free functions; this is only the shape they must expose

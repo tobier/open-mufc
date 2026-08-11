@@ -30,12 +30,12 @@ static void applyAircraft()
 
   // A module that took the display owns it from here. Anything else is DCS-BIOS
   // talking with nothing for us to draw, which stays blank.
-  if (!none && Modules::select(aircraft))
+  if (!none && DCS::Modules::select(aircraft))
   {
     return;
   }
 
-  Modules::release();
+  DCS::Modules::release();
   MainDisplay::idle();
 }
 
@@ -72,7 +72,7 @@ void setup()
   MainDisplay::init();
   OptionDisplays::init();
   Lights::init();
-  Modules::init();
+  DCS::Modules::init();
 
   MainDisplay::splash();
 
@@ -100,10 +100,10 @@ void loop()
   if (!stalled && (millis() - lastFrameMs) > STALL_TIMEOUT_MS)
   {
     stalled = true;
-    Modules::release();
+    DCS::Modules::release();
     MainDisplay::idle();
   }
 
-  Modules::update();
+  DCS::Modules::update();
   OptionDisplays::update();
 }

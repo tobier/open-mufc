@@ -5,7 +5,7 @@
 
 #include "MainDisplay.h"
 
-namespace FA18C
+namespace DCS::FA18C
 {
     void init()
     {

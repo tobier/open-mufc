@@ -20,7 +20,6 @@
 #define DED_X ((256 - DED_COLS * DED_CELL_W) / 2)
 #define DED_LINE_1_BASELINE 12
 
-// CMDS expendable counts, shown on the option panels below the GO/NO GO status.
 #define CMDS_AMOUNT 4
 
 // The font has no '@' or '^'; those slots hold symbols.
@@ -160,7 +159,6 @@ namespace
 
     bool panelsDirty = false;
 
-    // DCS pads the amounts, and the panels are right justified.
     void copyTrimmed(char *dest, const char *src)
     {
         while (*src == ' ')
@@ -180,8 +178,6 @@ namespace
 
     void applyPanels()
     {
-        // Panel 1 is the CMDS STATUS window. Left blank: DCS does not appear to
-        // drive LIGHT_CMDS_GO / _NO_GO, so there is nothing truthful to show.
         OptionDisplays::setLabel(OptionDisplays::Opt1, "");
         OptionDisplays::setLabel(OptionDisplays::Opt2, active ? cmdsO1 : "");
         OptionDisplays::setLabel(OptionDisplays::Opt3, active ? cmdsO2 : "");
@@ -269,7 +265,6 @@ namespace
             c -= ('a' - 'A');
         }
 
-        // The other format code, 'b', wants an oversized glyph we do not have.
         if (format == 'i')
         {
             return inverseOf(c);
@@ -316,7 +311,7 @@ namespace
     }
 }
 
-namespace F16C
+namespace DCS::F16C
 {
     void init()
     {

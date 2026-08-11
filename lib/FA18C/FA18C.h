@@ -1,6 +1,6 @@
 #pragma once
 
-namespace FA18C
+namespace DCS::FA18C
 {
     void init();
     bool handles(const char *aircraftName);

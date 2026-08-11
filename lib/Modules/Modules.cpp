@@ -10,10 +10,10 @@ namespace
 {
     // The registry. Adding an airframe means writing the module and adding one
     // row here; nothing else in the firmware needs to know it exists.
-    const Modules::Module registry[] = {
-        {AJS37::handles, AJS37::init, AJS37::setActive, AJS37::update},
-        {F16C::handles, F16C::init, F16C::setActive, F16C::update},
-        //{FA18C::handles, FA18C::init, FA18C::setActive, FA18C::update}, TODO: enable when ready
+    const DCS::Modules::Module registry[] = {
+        {DCS::F16C::handles, DCS::F16C::init, DCS::F16C::setActive, DCS::F16C::update},
+        //        {DCS::AJS37::handles, DCS::AJS37::init, DCS::AJS37::setActive, DCS::AJS37::update},
+        //{DCS::FA18C::handles, DCS::FA18C::init, DCS::FA18C::setActive, DCS::FA18C::update}, TODO: enable when ready
     };
 
     const uint8_t ModuleCount = sizeof(registry) / sizeof(registry[0]);
@@ -25,7 +25,7 @@ namespace
     uint8_t activeModule = NoModule;
 }
 
-namespace Modules
+namespace DCS::Modules
 {
     void init()
     {

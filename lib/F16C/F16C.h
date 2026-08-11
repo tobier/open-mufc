@@ -1,6 +1,6 @@
 #pragma once
 
-namespace F16C
+namespace DCS::F16C
 {
     void init();
     bool handles(const char *aircraftName);
