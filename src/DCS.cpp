@@ -2,10 +2,16 @@
 #define DCSBIOS_IRQ_SERIAL
 #include <DcsBios.h>
 
+#include "DED.h"
 #include "Lights.h"
 #include "MainDisplay.h"
 #include "Modules.h"
 #include "OptionDisplays.h"
+
+// Paints a DED test pattern at boot so layout and glyphs can be checked with
+// no sim running. Set to 0 for normal operation.
+#define DED_SELF_TEST 0
+#define DED_SELF_TEST_HOLD_MS 15000
 
 #define SPLASH_HOLD_MS 5000
 
@@ -65,12 +71,74 @@ namespace
 
     DcsBios::StringBuffer<ACFT_NAME_LEN> aircraftNameBuffer(MetadataStart_ACFT_NAME_A, onAircraftNameChange);
     DcsBios::IntegerBuffer updateCounterBuffer(MetadataEnd_UPDATE_COUNTER, onUpdateCounterChange);
+
+#if DED_SELF_TEST
+    // Copies text into a row and pads the rest, so the pattern below can be
+    // edited without counting to 24.
+    static void fillRow(char *row, const char *text)
+    {
+        uint8_t col = 0;
+        while (col < DED::Columns && text[col] != '\0')
+        {
+            row[col] = text[col];
+            col++;
+        }
+
+        while (col < DED::Columns)
+        {
+            row[col++] = ' ';
+        }
+
+        row[DED::Columns] = '\0';
+    }
+
+    static void dedSelfTest()
+    {
+        char rows[DED::Lines][DED::Columns + 1];
+
+        // Reads 1..24 across the panel: a short or clipped row is visible at a
+        // glance, and the last '4' proves the full width fits.
+        fillRow(rows[0], "123456789012345678901234");
+
+        fillRow(rows[1], "R2 ABCDEFGHIJKLMNOPQRST");
+
+        // '~' stands in for the two symbol slots, patched in below.
+        fillRow(rows[2], "R3 41~55.039' STPT ~1");
+        for (uint8_t col = 0; col < DED::Columns; col++)
+        {
+            if (rows[2][col] != '~')
+            {
+                continue;
+            }
+
+            rows[2][col] = (char)(col < 10 ? DED::Font::GlyphDegree
+                                           : DED::Font::GlyphUpDownArrow);
+        }
+
+        // Inverted through the end of the row, so the trailing spaces show the
+        // cell block and expose any gap between cells.
+        fillRow(rows[3], "R4 NORMAL / INVERSE");
+        for (uint8_t col = 11; col < DED::Columns; col++)
+        {
+            rows[3][col] = (char)DED::Font::inverseOf((uint8_t)rows[3][col]);
+        }
+
+        fillRow(rows[4], "R5 BOTTOM ROW, NOT CUT");
+
+        DED::draw(rows);
+        delay(DED_SELF_TEST_HOLD_MS);
+    }
+#endif
 }
 
 namespace DCS
 {
     void setup()
     {
+#if DED_SELF_TEST
+        dedSelfTest();
+#endif
+
         DcsBios::setup();
         DCS::Modules::init();
 
