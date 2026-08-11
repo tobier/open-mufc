@@ -13,7 +13,11 @@ An open source firmware implementation for the [Multipurpose UFC][mufc-url].
 > kind. Flashing it to your hardware may void warranties or damage your device. You are
 > solely responsible for any consequences of using this software.
 
-## Supported modules
+## Supported aircraft
+
+The firmware supports [DCS][dcs-bios-url] and [Falcon BMS][fbac-url] by compiling the firmware using the `env:dcs` and `env:bms` environments respectively.
+
+### DCS
 
 | Aircraft | Status | Comment |
 | --- | :---: | --- |
@@ -21,10 +25,20 @@ An open source firmware implementation for the [Multipurpose UFC][mufc-url].
 | F-16C | ✅ | Supports DED, CMDS and (some) lights |
 | F/A-18C | ❌ | Planned, not yet implemented |
 
+### Flacon BMS
+
+| Aircraft | Status | Comment |
+| --- | :---: | --- |
+| F-15 | ❌ | Planned, not yet implemented |
+| F-16 | ❌ | Planned, not yet implemented |
+
 ## License
 
 Distributed under the `GPL 3.0` license. See [LICENSE][license-url] for more information.
 
 [license-url]: https://github.com/tobier/open-mufc/blob/master/LICENSE
+
+[dcs-bios-url]: https://github.com/DCS-Skunkworks/dcs-bios
+[fbac-url]: https://github.com/Bacon8tor/FalconBMSArduinoConnector
 
 [mufc-url]: https://www.multipurpose-ufc.com/
