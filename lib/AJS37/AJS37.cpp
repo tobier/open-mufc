@@ -23,6 +23,13 @@ namespace
 
     void setDigit(uint8_t index, char value)
     {
+        // A dark digit arrives as NUL, which would terminate the string and
+        // take every digit to its right with it.
+        if (value < ' ')
+        {
+            value = ' ';
+        }
+
         if (digits[index] == value)
         {
             return;
@@ -98,8 +105,6 @@ namespace AJS37
 {
     void init()
     {
-        memset(digits, ' ', CK37_DIGITS);
-        digits[CK37_DIGITS] = '\0';
         ck37Dirty = false;
 
         warnLeft = false;
